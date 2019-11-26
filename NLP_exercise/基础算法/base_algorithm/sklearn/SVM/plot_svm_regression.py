@@ -1,0 +1,37 @@
+# -*- coding: utf-8 -*-
+
+import numpy as np
+from sklearn.svm import SVR
+import matplotlib.pyplot as plt
+
+# generate sample data
+x = np.sort(5 * np.random.rand(40, 1), axis = 0)
+# y = np.sin(x).ravel()
+
+y = x.ravel()
+# add noise to targets
+y[::5] += 3 * (0.5 - np.random.rand(8))
+
+# fit the regression model
+svr_rbf = SVR(kernel = 'rbf', C = 1e3, gamma = 0.1)
+svr_lin = SVR(kernel = 'linear', C = 1e3)
+svr_poly = SVR(kernel = 'poly', C = 1e3, degree = 2)
+
+y_rbf = svr_rbf.fit(x, y).predict(x)
+y_lin = svr_lin.fit(x, y).predict(x)
+y_poly = svr_poly.fit(x, y).predict(x)
+
+
+# plot results
+plt.scatter(x, y, c = 'k', label = 'data')
+plt.hold('on')
+plt.plot(x, y_rbf, c = 'k', label = 'RBF model')
+plt.plot(x, y_lin, c = 'r', label = 'Linear model')
+plt.plot(x, y_poly, c = 'b', label = 'Polynomial model')
+
+plt.xlabel('data')
+plt.ylabel('target')
+plt.title("support vector machine")
+plt.legend()
+plt.show()
+

@@ -1,0 +1,79 @@
+# -*- coding: utf-8 -*-
+
+import numpy as np
+import matplotlib.pyplot as plt
+from sklearn.datasets import make_circles
+from sklearn.ensemble import RandomTreesEmbedding, ExtraTreesClassifier
+from sklearn.decomposition import TruncatedSVD
+from sklearn.naive_bayes import BernoulliNB
+
+
+x, y = make_circles(factor = 0.5, random_state = 0, noise = 0.00001)
+
+hasher = RandomTreesEmbedding(n_estimators = 10, random_state = 0, max_depth = 3)
+x_transformed = hasher.fit_transform(x)
+
+# visualize result using PCA
+pca = TruncatedSVD(n_components = 2)
+x_reduced = pca.fit_transform(x_transformed)
+
+nb = BernoulliNB()
+nb.fit(x_transformed, y)
+
+trees = ExtraTreesClassifier(max_depth = 3, n_estimators = 10, random_state = 0)
+trees.fit(x, y)
+
+fig = plt.figure(figsize = (9, 8))
+ax = plt.subplot(221)
+ax.scatter(x[:, 0], x[:, 1], c = y, s = 50)
+ax.set_title("original data 2d")
+ax.set_xticks(())
+ax.set_yticks(())
+
+
+ax = plt.subplot(222)
+ax.scatter(x_reduced[:, 0], x_reduced[:, 1], c = y, s = 50)
+ax.set_title("PCA reduction (2d) of transformed data (%dd)" % x_transformed.shape[1])
+ax.set_xticks(())
+ax.set_yticks(())
+
+
+h = 0.01
+x_min, x_max = x[:, 0].min() - 0.5, x[:, 0].max() + 0.5
+y_min, y_max = x[:, 1].min() - 0.5, x[:, 1].max() + 0.5
+xx, yy = np.meshgrid(np.arange(x_min, x_max, h), np.arange(y_min, y_max, h))
+
+transformed_grid = hasher.transform(np.c_[xx.ravel(), yy.ravel()])
+y_grid_pred = nb.predict_proba(transformed_grid)[:, 1]
+
+ax = plt.subplot(223)
+ax.set_title("Naive Bayes on Transformed data")
+ax.pcolormesh(xx, yy, y_grid_pred.reshape(xx.shape))
+ax.scatter(x[:, 0], x[:, 1], c=y, s=50)
+ax.set_ylim(-1.4, 1.4)
+ax.set_xlim(-1.4, 1.4)
+ax.set_xticks(())
+ax.set_yticks(())
+
+
+# transform grid using ExtraTreesClassifier
+y_grid_pred = trees.predict_proba(np.c_[xx.ravel(), yy.ravel()])[:, 1]
+
+ax = plt.subplot(224)
+ax.set_title("ExtraTrees predictions")
+ax.pcolormesh(xx, yy, y_grid_pred.reshape(xx.shape))
+ax.scatter(x[:, 0], x[:, 1], c=y, s=50)
+ax.set_ylim(-1.4, 1.4)
+ax.set_xlim(-1.4, 1.4)
+ax.set_xticks(())
+ax.set_yticks(())
+
+plt.tight_layout()
+plt.show()
+
+
+
+
+
+
+

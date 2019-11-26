@@ -1,0 +1,44 @@
+# -*- coding: utf-8 -*-
+
+import numpy as np
+import matplotlib.pyplot as plt
+from matplotlib.colors import ListedColormap
+from sklearn import datasets
+from sklearn.neighbors import NearestCentroid
+
+n_neighbors = 15
+
+# import some data to play with
+iris = datasets.load_iris()
+x = iris.data[:, :2]
+y = iris.target
+
+h = 0.02  # step size in the mesh
+
+# Create color maps
+cmap_light = ListedColormap(['#FFAAAA', '#AAFFAA', '#AAAAFF'])
+cmap_bold = ListedColormap(['#FF0000', '#00FF00', '#0000FF'])
+
+
+for shrinkage in [None, 0.1]:
+	clf = NearestCentroid(shrink_threshold = shrinkage)
+	clf.fit(x, y)
+	y_pred = clf.predict(x)
+	print(shrinkage, np.mean(y == y_pred))
+
+	x_min, x_max = x[:, 0].min() - 1, x[:, 0].max() + 1
+	y_min, y_max = x[:, 1].min() - 1, x[:, 1].max() + 1
+
+	xx, yy = np.meshgrid(np.arange(x_min, x_max, h), np.arange(y_min, y_max, h))
+	z = clf.predict(np.c_[xx.ravel(), yy.ravel()])
+	z = z.reshape(xx.shape)
+
+	plt.figure()
+	plt.pcolormesh(xx, yy, z, cmap = cmap_light)
+	plt.scatter(x[:, 0], x[:, 1], c = y, cmap = cmap_bold)
+	plt.title("3-class classification (shrinkage_threshold) = %r" %shrinkage)
+	plt.axis('tight')
+
+plt.show()
+
+

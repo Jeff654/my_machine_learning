@@ -1,0 +1,89 @@
+# -*- coding: utf-8 -*-
+
+from numpy import *
+from Tkinter import *
+import cart
+import matplotlib
+matplotlib.use('TkAgg')
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+from matplotlib.figure import Figure
+
+
+
+def reDraw(total_error, total_number):
+	reDraw.clf()
+	reDraw.a = reDraw.add_subplot(111)
+
+	if chkBtnVar.get():
+		if total_number < 2:
+			total_number = 2
+
+		my_tree = cart.create_tree(reDraw.rawDat, cart.model_leaf, cart.model_error, (total_error, total_number))
+
+		y_hat = cart.create_forecast(my_tree, reDraw.rawDat, cart.modelTree_evaluate)
+
+	else:
+		my_tree = cart.create_tree(reDraw.rawDat, options = (total_error, total_number))
+		y_hat = cart.create_forecast(my_tree, reDraw.testDat)
+	
+	reDraw.a.scatter(reDraw.rawDat[:, 0], reDraw.rawDat[:, 1], s = 5)
+	reDraw.a.plot(reDraw.testDat, y_hat, linewidth = 2.0)
+	reDraw.canvas.show()
+
+
+
+def get_inputs():
+	try:
+		total_number = int(total_numberEntry.get())
+	except:
+		total_number = 10
+		print "enter integer for total_number"
+		
+		total_numberEntry.delete(0, END)
+		total_numberEntry.insert(0, '10')
+
+	try:
+		total_error = float(total_errorEntry.get())
+	except:
+		total_error = 1.0
+		print "enter float for total_error"
+
+		total_errorEntry.delete(0, END)
+		total_errorEntry.insert(0, '1.0')
+	
+	return total_number, total_error
+
+
+
+def draw_newTree():
+	total_number, total_error = get_inputs()
+	reDraw(total_error, total_number)
+
+
+
+root = Tk()
+
+Label(root, text = "plot place holder").grid(row = 0, columnspan = 3)
+Label(root, text = "total_number").grid(row = 1, column = 0)
+
+total_numberEntry = Entry(root)
+total_numberEntry.grid(row = 1, column = 1)
+total_numberEntry.insert(0, '10')
+
+Label(root, text = 'total_error').grid(row = 2, column = 0)
+
+total_errorEntry = Entry(root)
+total_errorEntry.grid(row = 2, column = 1)
+total_errorEntry.insert(0, '1.0')
+
+Button(root, text = "reDraw", command = draw_newTree()).grid(row = 1, column = 2, rowspan = 3)
+
+chkBtnVar = IntVar()
+chkBtn = Checkbutton(root, text = "model tree", variable = chkBtnVar)
+chkBtn.grid(row = 3, column = 0, columnspan = 2)
+
+reDraw.rawDat = mat(cart.load_dataSet('sine.txt'))
+reDraw.testDat = arange(min(reDraw.rawDat[:, 0]), max(reDraw.rawDat[:, 0]), 0.01)
+reDraw(1.0, 10)
+
+root.mainloop()
